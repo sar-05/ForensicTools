@@ -1,5 +1,7 @@
-function Get-NetworkProcess
-{
+function Get-NetworkProcess {
+    param(
+    [bool]$ReturnIPList
+    )
     # Obtiene los procesos activos con path no nulo
     $procesos = Get-Process | Where-Object { $null -ne $_.Path} | Select-Object Id, ProcessName, Path
 
@@ -96,4 +98,8 @@ function Get-NetworkProcess
     Write-Host "-------------------------------------------------------------------"
     Write-Host "FIN DE BUSQUEDA DE PROCESOS SOSPECHOSOS"
     Write-Host "-------------------------------------------------------------------"
+
+    if ($ReturnIPList){
+        return $arreglo_ip
+    }
 }
