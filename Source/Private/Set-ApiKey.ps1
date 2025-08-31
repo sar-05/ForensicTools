@@ -1,34 +1,29 @@
-function Set-ApiKey {
-    param(
+function Set-ApiKey
+{
+    param (
         [int] $MaxRetries = 3
     )
 
     $Attempts = 0
 
-    do {
+    do
+    {
         $Attempts++
+        try
+        {
+            $Key = Read-Host -Prompt "Set the AbuseIPDB API Key: "
+            $ApiKey = [apikey]::new($Key)
+            if ($ApiKey.Validate())
+            {
+                $env:ABUSEIPDB_API_KEY = $ApiKey.Key
+                return $ApiKey.Key
 
-        try {
-            $ApiKey = Read-Host -Prompt "Set the AbuseIPDB API Key"
-            ApiKeyTest $ApiKey
-            $env:ABUSEIPDB_API_KEY = $ApiKey
-            return $ApiKey
-
-        } catch [System.Net.WebException] {
-            Write-Error "HTTP/Network error: $($_.Exception.Status) - $($_.Exception.Message)"
-            throw
-        } catch [System.ArgumentException] {
-            Write-Warning "Invalid API key: $_"
-        } catch [System.InvalidOperationException] {
-            Write-Warning "API key validation failed: $_"
-        } catch [System.Threading.Tasks.TaskCanceledException] {
-            Write-Error "Api key validation request cancelled."
-        } catch {
-            Write-Error "Unexpected error when setting API key: $_"
-            throw
+            }
+        } catch
+        {
+            Write-Error "Unable to set API Key: $_"
         }
-
     } while ($Attempts -lt $MaxRetries)
 
-    throw [System.InvalidOperationException]::new("Max amount of attempts reached.")
+    throw [System.InvalidOperationException]::new("Max attempts of setting the API Key reached.")
 }

@@ -1,8 +1,10 @@
-function Get-ApiKey {
+function Get-ApiKey
+{
     param ()
 
     $ApiKey = $env:ABUSEIPDB_API_KEY
-    if ($ApiKey) {
+    if ($ApiKey)
+    {
         return $ApiKey
     }
 
