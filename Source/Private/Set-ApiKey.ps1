@@ -11,7 +11,7 @@ function Set-ApiKey
         $Attempts++
         try
         {
-            $Key = Read-Host -Prompt "Set the AbuseIPDB API Key: "
+            $Key = Read-Host -Prompt "Set the AbuseIPDB API Key"
             $ApiKey = [apikey]::new($Key)
             if ($ApiKey.Validate())
             {
