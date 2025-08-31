@@ -1,17 +1,41 @@
 function Test-Ip
 {
-    <# Recieves Ip as a string, Checks uses AbusIPDB to get data in json format #>
     param (
-        [string]$Ip
+        [string]$Ip='104.26.12.38',
+        [string]$Url='https://api.abuseipdb.com/api/v2/check',
+        [int]$MaxAgeInDays=90
     )
 
-    $querystring = @{
-        'ipAddress' = $Ip
-        'maxAgeInDays' = '90'
+    if (-not [System.Net.IPAddress]::TryParse($Ip, [ref]$IpObj)) {
+        throw [System.ArgumentException]::new("Parameter $Ip is not a valid IP address")
     }
-    $url = 'https://api.abuseipdb.com/api/v2/check'
-    $headers = @{ 'Key' = '' }
-    $response = Invoke-RestMethod -uri $url -Method GET -Body $querystring -Headers $headers
 
-    $response | ConvertTo-Json -Depth 10 | Write-Output
+    if (-not [System.Uri]::TryParse($Url, [ref]$UrlObj)) {
+        throw [System.ArgumentException]::new("Parameter $Url is not a valid Url address")
+    }
+
+    try {
+      $ApiKey = Get-ApiKey
+    } catch {
+      Write-Error "Get-ApiKey failed: $($_.Exception.Message)"
+      throw
+    }
+
+    $Headers = @{ 'Key' = $ApiKey }
+    $Querystring = @{
+        'IpAddress' = $IpObj.ToString()
+        'MaxAgeInDays' = $MaxAgeInDays.ToString()
+    }
+
+    try {
+        $Response = Invoke-RestMethod -uri $UrlObj.ToString() -Method GET -Body $Querystring -Headers $Headers -ErrorAction Stop
+        return $Response
+    } catch [System.Net.WebException] {
+        Write-Error "HTTP/Network error: $($_.Exception.Status) - $($_.Exception.Message)"
+        throw
+    } catch [System.Threading.Tasks.TaskCanceledException] {
+        Write-Error "Request timed out or cancelled."
+    } catch {
+        Write-Error "Error checking IP $Ip in databse: $($_.Exception.GetType().FullName) - $($_.Exception.Message)"
+    }
 }
