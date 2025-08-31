@@ -1,41 +1,41 @@
 function Test-Ip
 {
     param (
-        [string]$Ip='104.26.12.38',
+        [Parameter(Mandatory=$true)][string]$Ip,
         [string]$Url='https://api.abuseipdb.com/api/v2/check',
         [int]$MaxAgeInDays=90
     )
 
-    if (-not [System.Net.IPAddress]::TryParse($Ip, [ref]$IpObj)) {
-        throw [System.ArgumentException]::new("Parameter $Ip is not a valid IP address")
+    try
+    {
+        # Parse will throw if InputString is not a valid IP address
+        # Recover original string type, but parsed
+        $Ip= ([System.Net.IPAddress]::Parse($Ip)).ToString()
+        $ApiKey = Get-ApiKey
+    } catch
+    {
+        Write-Error "Unable to parse any IP: $_"
+        throw #consider just setting error action to stop
     }
 
-    if (-not [System.Uri]::TryParse($Url, [ref]$UrlObj)) {
-        throw [System.ArgumentException]::new("Parameter $Url is not a valid Url address")
+
+    $Query = @{
+        # Whitelisted ABUSEIPDB IP
+        ipAddress = $Ip
+        maxAgeInDays = 90
     }
 
-    try {
-      $ApiKey = Get-ApiKey
-    } catch {
-      Write-Error "Get-ApiKey failed: $($_.Exception.Message)"
-      throw
+    $Headers = @{
+        Key    = $ApiKey
+        Accept = 'application/json'
     }
 
-    $Headers = @{ 'Key' = $ApiKey }
-    $Querystring = @{
-        'IpAddress' = $IpObj.ToString()
-        'MaxAgeInDays' = $MaxAgeInDays.ToString()
-    }
-
-    try {
-        $Response = Invoke-RestMethod -uri $UrlObj.ToString() -Method GET -Body $Querystring -Headers $Headers -ErrorAction Stop
+    try
+    {
+        $Response = Invoke-RestMethod -Uri $Url -Headers $Headers -Body $Query
         return $Response
-    } catch [System.Net.WebException] {
-        Write-Error "HTTP/Network error: $($_.Exception.Status) - $($_.Exception.Message)"
-        throw
-    } catch [System.Threading.Tasks.TaskCanceledException] {
-        Write-Error "Request timed out or cancelled."
-    } catch {
-        Write-Error "Error checking IP $Ip in databse: $($_.Exception.GetType().FullName) - $($_.Exception.Message)"
+    } catch
+    {
+        "Unexpected error: $($_.Exception.GetType().FullName) - $($_.Exception.Message)"
     }
 }

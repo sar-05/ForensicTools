@@ -1,6 +1,6 @@
 function Get-NetworkProcess {
     param(
-    [bool]$ReturnIPList
+    [switch]$ReturnIPList
     )
     # Obtiene los procesos activos con path no nulo
     $procesos = Get-Process | Where-Object { $null -ne $_.Path} | Select-Object Id, ProcessName, Path
