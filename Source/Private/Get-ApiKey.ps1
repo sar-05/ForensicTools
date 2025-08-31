@@ -10,4 +10,3 @@ function Get-ApiKey
 
     return Set-ApiKey
 }
-

@@ -1,8 +1,16 @@
 function Test-IpList
 {
     param(
-        [switch]$Test
+        [switch]$Test,
+        [switch]$Menu
     )
+
+    # Possibly imlplement a mechanism where error  action is stop if calling directly
+    # But throw a different type of error to go back to the menu if calling from there
+    if (-not $Menu)
+    {
+        $ErrorActionPreference='Stop'
+    }
 
     if ($Test)
     {
@@ -18,11 +26,27 @@ function Test-IpList
     {
         try
         {
-            $Answer=Test-Ip $Ip
+            # Parse will throw if InputString is not a valid IP address
+            $Ip=[System.Net.IPAddress]::Parse($Ip)
+            $Answer=Test-Ip -Ip $Ip
             $Results+=$Answer.data
+        } catch [System.FormatException]
+        {
+            Write-Warning "Invalid format: $($_.Exception.Message)"
+            continue
+        } catch [System.ArgumentNullException]
+        {
+            Write-Warning "Input was null: $($_.Exception.Message)"
+            continue
+        } catch [System.InvalidOperationException]
+        {
+            Write-Error "Invalid Operation: $($_.Exception.Message)"
+        } catch [System.Net.Http.HttpRequestException]
+        {
+            Write-Error "Unable to connect to AbuseIPDB: $($_.Exception.Message)"
         } catch
         {
-            Write-Error "Unable to keep testing the IP List: $_" -ErrorAction Stop
+            Write-Error "Unexpected error when testing the IP list: $_"
         }
     }
     return $Results

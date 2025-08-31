@@ -31,13 +31,9 @@ class apikey
 
             $response = Invoke-WebRequest -Uri $this.ValidationUrl -Headers $headers -Body $query -ErrorAction Stop
             $response.StatusDescription
-            # Returns true only if status code is 200
-            if (-not($response.StatusCode -eq 200))
-            {
-                $Message="Code: $($response.StatusCode) - $($response.StatusDescription)"
-                throw [System.UnauthorizedAccessException]::new($Message)
-            }
-            return $true
+
+            # Returns true only if StatusCode is 200
+            return $response.StatusCode -eq 200
         } catch
         {
             Write-Warning "Validation of API Key failed: $($_.Exception.Message)"

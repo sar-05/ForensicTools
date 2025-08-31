@@ -19,9 +19,10 @@ function Set-ApiKey
                 return $ApiKey.Key
 
             }
+            throw [System.FormatException]::new("Invalid API Key")
         } catch
         {
-            Write-Error "Unable to set API Key: $_"
+            Write-Warning "Unable to set API Key: $_"
         }
     } while ($Attempts -lt $MaxRetries)
 
