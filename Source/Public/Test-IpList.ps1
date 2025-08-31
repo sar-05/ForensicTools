@@ -14,7 +14,7 @@ function Test-IpList
 
     if ($Test)
     {
-        $IpList=@('136.34.156.82','14.103.45.20','104.26.12.38','167.94.138.137')
+        $IpList=@('136.34.156.82','Thisisabadtest','104.26.12.38','167.94.138.137')
     } else
     {
         $IpList=Get-NetworkProcess -ReturnIPList
@@ -22,13 +22,27 @@ function Test-IpList
 
     $Results=@()
 
+    try
+    {
+        $ApiKey=Get-ApiKey
+    } catch [System.Net.Http.HttpRequestException]
+    {
+        Write-Error "Network error: $($_.Exception.Message)"
+    } catch [System.InvalidOperationException]
+    {
+        Write-Error "Invalid operation: $($_.Exception.Message)"
+    } catch
+    {
+        Write-Error "Unexpected error when the API Key: $_"
+    }
+
     foreach ($Ip in $IpList)
     {
         try
         {
             # Parse will throw if InputString is not a valid IP address
             $Ip=[System.Net.IPAddress]::Parse($Ip)
-            $Answer=Test-Ip -Ip $Ip
+            $Answer=Test-Ip -Ip $Ip -ApiKey $ApiKey
             $Results+=$Answer.data
         } catch [System.FormatException]
         {
@@ -40,7 +54,7 @@ function Test-IpList
             continue
         } catch [System.InvalidOperationException]
         {
-            Write-Error "Invalid Operation: $($_.Exception.Message)"
+            Write-Error "Invalid operation: $($_.Exception.Message)"
         } catch [System.Net.Http.HttpRequestException]
         {
             Write-Error "Unable to connect to AbuseIPDB: $($_.Exception.Message)"

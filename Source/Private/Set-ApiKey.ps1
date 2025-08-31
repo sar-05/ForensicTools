@@ -11,16 +11,17 @@ function Set-ApiKey
         $Attempts++
         try
         {
-            $Key = Read-Host -Prompt "Set the AbuseIPDB API Key"
+            $Key = Read-Host -AsSecureString -Prompt "Set the AbuseIPDB API Key"
             $ApiKey = [apikey]::new($Key)
             if ($ApiKey.Validate())
             {
-                $env:ABUSEIPDB_API_KEY = $ApiKey.Key
-                return $ApiKey.Key
+                $env:ABUSEIPDB_API_KEY = $ApiKey.ToString()
+                return $ApiKey.ToString()
 
             }
-            throw [System.FormatException]::new("Invalid API Key")
-        } catch
+            # Validation fails when status code isn't 200
+            throw [System.FormatException]::new("API Key failed validation")
+        } catch [System.FormatException]
         {
             Write-Warning "Unable to set API Key: $_"
         }

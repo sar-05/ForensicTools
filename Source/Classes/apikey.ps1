@@ -1,9 +1,9 @@
 class apikey
 {
-    [Parameter(Mandatory=$true)][string]$Key
+    [Parameter(Mandatory=$true)][securestring]$Key
     [string]$ValidationUrl='https://api.abuseipdb.com/api/v2/check'
 
-    ApiKey([string]$Key)
+    ApiKey([securestring]$Key)
     {
         $this.Key = $Key
     }
@@ -14,12 +14,17 @@ class apikey
         $this.ValidationUrl = $ValidationUrl
     }
 
+    [string]ToString()
+    {
+        return ConvertFrom-SecureString -SecureString $this.Key -AsPlainText
+    }
+
     [bool]Validate()
     {
         try
         {
             $headers = @{
-                Key = $this.Key
+                Key = $this.ToString()
                 Accept = 'application/json'
             }
 
@@ -34,6 +39,11 @@ class apikey
 
             # Returns true only if StatusCode is 200
             return $response.StatusCode -eq 200
+            # Only throw if network is unreachable
+        } catch [System.Net.Http.HttpRequestException]
+        {
+            Write-Error "Unable to verify API Key: $_"
+            throw
         } catch
         {
             Write-Warning "Validation of API Key failed: $($_.Exception.Message)"
