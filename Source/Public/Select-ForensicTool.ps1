@@ -5,7 +5,8 @@ function Select-ForensicTool {
     2) Get-NetworkProcess
     3) Test-IpList
     4) Exit
-    Your Selection: "
+
+    Your Selection"
 
     while ($true) {
         Write-Host ""
@@ -20,6 +21,9 @@ function Select-ForensicTool {
             }
             '3' {
                 Test-IpList
+            }
+            '4' {
+                exit
             }
             default {
                 Write-Warning "Invalid selection. Please enter 1, 2, or 3."

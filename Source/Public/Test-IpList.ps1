@@ -22,6 +22,12 @@ function Test-IpList
 
     $Results=@()
 
+    if ($IpList.Count -eq 0)
+    {
+        Write-Warning "Empty IP list"
+        return $null
+    }
+
     try
     {
         $ApiKey=Get-ApiKey
