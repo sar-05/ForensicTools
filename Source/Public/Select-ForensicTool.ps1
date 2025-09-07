@@ -1,4 +1,4 @@
-function Show-Menu {
+function Select-ForensicTool {
 
     $Prompt="Select an option:
     1) Get-EventReport
