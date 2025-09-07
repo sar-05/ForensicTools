@@ -3,7 +3,9 @@ function Select-ForensicTool {
     $Prompt="Select an option:
     1) Get-EventReport
     2) Get-NetworkProcess
-    3) Test-IpList"
+    3) Test-IpList
+    4) Exit
+    Your Selection: "
 
     while ($true) {
         Write-Host ""
@@ -17,7 +19,7 @@ function Select-ForensicTool {
                 Get-NetworkProcess
             }
             '3' {
-                Test-IpList -Test
+                Test-IpList
             }
             default {
                 Write-Warning "Invalid selection. Please enter 1, 2, or 3."
