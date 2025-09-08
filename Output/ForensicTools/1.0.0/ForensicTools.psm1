@@ -456,6 +456,15 @@ function Test-IpList
             Write-Error "Unexpected error when testing the IP list: $_"
         }
     }
-    return $Results
+    try
+    {
+        Write-Host "Savinig report to IpList.csv"
+        $Results | Export-Csv -Path "IpList.csv" -NoTypeInformation
+    }
+    catch
+    {
+        Write-Warning "Unable to save results: $_"
+    }
+    return $Results | Format-Table
 }
-#EndRegion './Public/Test-IpList.ps1' 74
+#EndRegion './Public/Test-IpList.ps1' 83
