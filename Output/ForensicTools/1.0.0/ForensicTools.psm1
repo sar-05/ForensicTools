@@ -387,6 +387,42 @@ function Select-ForensicTool {
 
 function Test-IpList
 {
+<#
+.SYNOPSIS
+Tests a list of IP addresses against the AbuseIPDB API and exports results to
+IpList.csv.
+
+.DESCRIPTION
+Test-IpList validates and tests multiple IP addresses using the Test-Ip helper.
+When -Test is supplied, a small built-in sample list (including invalid entries)
+is used; otherwise the IP list is retrieved from Get-NetworkProcess -ReturnIPList.
+If -Menu is not supplied the function sets ErrorActionPreference to Stop.
+
+.PARAMETER Test
+Switch. Use a small built-in test list of IPs (includes invalid entries) instead
+of retrieving real IPs.
+
+.PARAMETER Menu
+Switch. Indicates the function is being called from Select-ForensicTool menu.
+
+.OUTPUTS
+System.Object
+An array of objects is returned and also displayed with Format-Table.
+A CSV file IpList.csv is written with the results.
+
+.EXAMPLE
+PS> Test-IpList -Test
+Runs the function against the built-in test IP list, exports IpList.csv, and displays the results.
+
+.EXAMPLE
+PS> Test-IpList
+Retrieves the IP list from Get-NetworkProcess, tests each IP, exports IpList.csv
+and displays the results.
+
+.NOTES
+Requires helper functions: Get-ApiKey, Get-NetworkProcess, and Test-Ip.
+Ensure valid API credentials and network connectivity for AbuseIPDB calls.
+#>
     param(
         [switch]$Test,
         [switch]$Menu
@@ -467,4 +503,4 @@ function Test-IpList
     }
     return $Results | Format-Table
 }
-#EndRegion './Public/Test-IpList.ps1' 83
+#EndRegion './Public/Test-IpList.ps1' 119
