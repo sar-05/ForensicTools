@@ -6,9 +6,6 @@
 # -----------------------------------------------------------------------------
 
 @{
-    Path = "{moduleName}.psd1"
+    Path = "ForensicTools.psd1"
     VersionedOutputDirectory = $true
-    CopyDirectories = @(
-        'en-US'
-    )
 }
