@@ -1,4 +1,22 @@
+Set-StrictMode -Version Latest
+
 function Get-NetworkProcess {
+#Set-StrictMode -Off
+<#
+.SYNOPSIS
+Obtiene los procesos sospechosos que tienen conexion a internet para obtener las IP relacionadas a esos procesos y detectar si se trata de un proceso sospechoso.
+Tambien obtiene los procesos no firmados.
+
+.DESCRIPTION
+Esta funcin busca de entre los procesos sospechosos que tengan conexion a internet para identificar si son un proceso sospechoso, además de los procesos 
+con conexion, identifica aquellos procesos que no esten firmados por grupos verificados.
+
+.EXAMPLE
+Get-NetworkProcess
+
+.NOTES
+Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a auditorias que requieran evaluar equipos con actividades sospechosas.
+#>
     param(
     [switch]$ReturnIPList
     )
@@ -26,17 +44,17 @@ function Get-NetworkProcess {
     $asociacion = foreach($elemento in $conexiones)
     {
         $process_con = $procesos | Where-Object {$_.Id -eq $elemento.OwningProcess}
-        if($proc)
+        if($process_con)
         {
             [PSCustomObject]@{
-                ProcessName   = $process_con.ProcessName
-                PID           = $process_con.Id
-                Path          = $process_con.Path
-                LocalAddress  = $elemento.LocalAddress
-                LocalPort     = $elemento.LocalPort
-                RemoteAddress = $elemento.RemoteAddress
-                RemotePort    = $elemento.RemotePort
-                State         = $elemento.State
+                Nombre           = $process_con.ProcessName
+                PID              = $process_con.Id
+                Ruta             = $process_con.Path
+                Direccion_Local  = $elemento.LocalAddress
+                Puerto_Local     = $elemento.LocalPort
+                Direccion_Remota = $elemento.RemoteAddress
+                Puerto_Remoto    = $elemento.RemotePort
+                Estado           = $elemento.State
 
             }
             $arreglo_ip += $elemento.RemoteAddress
@@ -53,6 +71,9 @@ function Get-NetworkProcess {
 
     Write-Host "ARREGLO DE IP'S: "
     Write-Host $arreglo_unico -Separator ", "
+
+    $informe_csv = $arreglo_unico | ForEach-Object { [PSCustomObject]@{Ip = $_} }
+    $informe_csv | Export-Csv -Path "$env:USERPROFILE\Desktop\ips_sospechosas.csv" -NoTypeInformation
 
     Write-Host "-------------------------------------------------------------------"
     Write-Host "FIN DE ASOCIACION DE PROCESOS CON CONEXIONES"
@@ -73,20 +94,20 @@ function Get-NetworkProcess {
             if($firma.Status -ne "Valid")
             {
                 [PSCustomObject]@{
-                    ProcessName   = $elemento.ProcessName
-                    PID           = $elemento.Id
-                    Path          = $elemento.Path
-                    Signature     = $elemento.Status
+                    Nombre   = $elemento.ProcessName
+                    PID      = $elemento.Id
+                    Ruta     = $elemento.Path
+                    Firma    = $elemento.Status
 
                 }
             }
         } catch
         {
             [PSCustomObject]@{
-                ProcessName   = $elemento.ProcessName
-                PID           = $elemento.Id
-                Path          = $elemento.Path
-                Signature     = "Error al verificar"
+                Nombre   = $elemento.ProcessName
+                PID      = $elemento.Id
+                Ruta     = $elemento.Path
+                Firma    = "Error al verificar"
             }
         }
 
@@ -94,6 +115,10 @@ function Get-NetworkProcess {
     # Impresión de la tabla de procesos con firma No Valida
     Write-Host "TABLA DE PROCESOS SOSPECHOSOS"
     $procesos_sospechosos | Format-Table -AutoSize
+
+    $informe_csv_2 = $procesos_sospechosos | ForEach-Object { [PSCustomObject]@{Proceso = $_.Nombre
+                                                                                Ruta = $_.Ruta } }
+    $informe_csv_2 | Export-Csv -Path "$env:USERPROFILE\Desktop\procesos_sospechosos.csv" -NoTypeInformation
 
     Write-Host "-------------------------------------------------------------------"
     Write-Host "FIN DE BUSQUEDA DE PROCESOS SOSPECHOSOS"
