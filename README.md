@@ -1,28 +1,24 @@
-# {moduleName}
+# ForensicTools
 
-## Requirements
+## Description
+
+This PowerShell module includes four functions meant to help in the process of
+auditing a Windows PC:
+
+- Get-EventReport
+  - Extracts and exports relevant events from the Windows Event Logs.
+- Get-NetworkProcess
+  - Gets suspicious processes that have an internet connection to obtain their IPs
+  - Also catches unsigned processes.
+- Test-IpList
+  - Recives a list of IPs and uses AbuseIPDB to return critical information
+    about their origin and danger.
+
+## Installation
+
+Simply copy the contents of Output to a directory in the `PSModulePath`, for
+example:
 
 ```posh
-Install-Script -Name Install-RequiredModule
+Copy-Item -Recurse "./Output/ForensicTools" "~/Documents/PowerShell/Modules"
 ```
-
-## Building your module
-
-1. run `Install-RequiredModule`
-
-2. add `.ps1` script files to the `Source` folder
-
-3. run `Build-Module .\Source`
-
-4. compiled module appears in the `Output` folder
-
-## Versioning
-
-ModuleBuilder will automatically apply the next semver version
-if you have installed [gitversion](https://gitversion.readthedocs.io/en/latest/).
-
-To manually create a new version run `Build-Module .\Source -SemVer 0.0.2`
-
-## Additional Information
-
-https://github.com/PoshCode/ModuleBuilder
