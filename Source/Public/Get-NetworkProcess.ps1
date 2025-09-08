@@ -8,7 +8,7 @@ Obtiene los procesos sospechosos que tienen conexion a internet para obtener las
 Tambien obtiene los procesos no firmados.
 
 .DESCRIPTION
-Esta funcin busca de entre los procesos sospechosos que tengan conexion a internet para identificar si son un proceso sospechoso, además de los procesos 
+Esta funcin busca de entre los procesos sospechosos que tengan conexion a internet para identificar si son un proceso sospechoso, además de los procesos
 con conexion, identifica aquellos procesos que no esten firmados por grupos verificados.
 
 .EXAMPLE
@@ -125,6 +125,6 @@ Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a 
     Write-Host "-------------------------------------------------------------------"
 
     if ($ReturnIPList){
-        return $arreglo_ip
+        return $arreglo_unico
     }
 }
