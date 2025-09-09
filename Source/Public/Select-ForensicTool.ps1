@@ -1,3 +1,5 @@
+Set-StrictMode -Version Latest
+
 function Select-ForensicTool {
 
     $Prompt="Select an option:

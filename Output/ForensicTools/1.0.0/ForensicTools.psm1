@@ -94,7 +94,7 @@ function Set-ApiKey
             }
             # Validation fails when status code isn't 200
             throw [System.FormatException]::new("API Key failed validation")
-        } catch [System.FormatException]
+        } catch
         {
             Write-Warning "Unable to set API Key: $_"
         }
@@ -154,8 +154,6 @@ function Get-EventReport(){
         [string]$ExportPath
     )
 
-    Set-StrictMode -Version Latest
-
     $startDate = (Get-Date).AddDays(-$Days)
     if (-not $ExportPath) {
         $ExportPath = "$env:USERPROFILE\Desktop\eventos_$((Get-Date).ToString('yyyyMMdd_HHmm')).csv"
@@ -213,14 +211,13 @@ function Get-EventReport(){
         Write-Host "`nEventos sospechosos exportados en: $suspExport" -ForegroundColor Red
     }
 }
-#EndRegion './Public/Get-EventReport.ps1' 84
+#EndRegion './Public/Get-EventReport.ps1' 82
 #Region './Public/Get-NetworkProcess.ps1' -1
 
-Set-StrictMode -Version Latest
-
-function Get-NetworkProcess {
-#Set-StrictMode -Off
-<#
+function Get-NetworkProcess
+{
+    #Set-StrictMode -Off
+    <#
 .SYNOPSIS
 Obtiene los procesos sospechosos que tienen conexion a internet para obtener las IP relacionadas a esos procesos y detectar si se trata de un proceso sospechoso.
 Tambien obtiene los procesos no firmados.
@@ -236,7 +233,7 @@ Get-NetworkProcess
 Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a auditorias que requieran evaluar equipos con actividades sospechosas.
 #>
     param(
-    [switch]$ReturnIPList
+        [switch]$ReturnIPList
     )
     # Obtiene los procesos activos con path no nulo
     $procesos = Get-Process | Where-Object { $null -ne $_.Path} | Select-Object Id, ProcessName, Path
@@ -251,9 +248,14 @@ Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a 
         RemotePort,
         State
 
-    Write-Host "-------------------------------------------------------------------"
-    Write-Host "ASOCIANDO LOS PROCESOS CON CONEXIONES..."
-    Write-Host "-------------------------------------------------------------------"
+
+    if (-not $ReturnIPList)
+    {
+        Write-Host "-------------------------------------------------------------------"
+        Write-Host "ASOCIANDO LOS PROCESOS CON CONEXIONES..."
+        Write-Host "-------------------------------------------------------------------"
+
+    }
 
     $arreglo_ip = @()
 
@@ -281,72 +283,81 @@ Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a 
     }
 
 
-    Write-Host "TABLA DE CONEXIONES"
 
-    $asociacion | Format-Table -AutoSize
+    if (-not $ReturnIPList)
+    {
+        Write-Host "TABLA DE CONEXIONES"
+        $asociacion | Format-Table -AutoSize
+    }
     # Filtra las ip's unicas de los procesos asociados
     $arreglo_unico = $arreglo_ip | Sort-Object | Get-Unique
 
-    Write-Host "ARREGLO DE IP'S: "
-    Write-Host $arreglo_unico -Separator ", "
-
-    $informe_csv = $arreglo_unico | ForEach-Object { [PSCustomObject]@{Ip = $_} }
-    $informe_csv | Export-Csv -Path "$env:USERPROFILE\Desktop\ips_sospechosas.csv" -NoTypeInformation
-
-    Write-Host "-------------------------------------------------------------------"
-    Write-Host "FIN DE ASOCIACION DE PROCESOS CON CONEXIONES"
-    Write-Host "-------------------------------------------------------------------"
-    Write-Host "`n"
-    Write-Host "-------------------------------------------------------------------"
-    Write-Host "BUSQUEDA DE PROCESOS SOSPECHOSOS..."
-    Write-Host "-------------------------------------------------------------------"
-
-    # Obtiene los datos de la firma digital y compara si la firma es valida
-    # para cada proceso que se obtuvo anteriormente
-    $procesos_sospechosos = foreach($elemento in $procesos)
+    if (-not $ReturnIPList)
     {
-        try
-        {
-            $firma = Get-AuthenticodeSignature -FilePath $elemento.Path
+        Write-Host "ARREGLO DE IP'S: "
+        Write-Host $arreglo_unico -Separator ", "
 
-            if($firma.Status -ne "Valid")
+        $informe_csv = $arreglo_unico | ForEach-Object { [PSCustomObject]@{Ip = $_} }
+        $informe_csv | Export-Csv -Path "$env:USERPROFILE\Desktop\ips_sospechosas.csv" -NoTypeInformation
+
+        Write-Host "-------------------------------------------------------------------"
+        Write-Host "FIN DE ASOCIACION DE PROCESOS CON CONEXIONES"
+        Write-Host "-------------------------------------------------------------------"
+        Write-Host "`n"
+        Write-Host "-------------------------------------------------------------------"
+        Write-Host "BUSQUEDA DE PROCESOS SOSPECHOSOS..."
+        Write-Host "-------------------------------------------------------------------"
+
+        # Obtiene los datos de la firma digital y compara si la firma es valida
+        # para cada proceso que se obtuvo anteriormente
+
+        $procesos_sospechosos = foreach($elemento in $procesos)
+        {
+            try
+            {
+                $firma = Get-AuthenticodeSignature -FilePath $elemento.Path
+
+                if($firma.Status -ne "Valid")
+                {
+                    [PSCustomObject]@{
+                        Nombre   = $elemento.ProcessName
+                        PID      = $elemento.Id
+                        Ruta     = $elemento.Path
+                        Firma    = $elemento.Status
+
+                    }
+                }
+            } catch
             {
                 [PSCustomObject]@{
                     Nombre   = $elemento.ProcessName
                     PID      = $elemento.Id
                     Ruta     = $elemento.Path
-                    Firma    = $elemento.Status
-
+                    Firma    = "Error al verificar"
                 }
             }
-        } catch
-        {
-            [PSCustomObject]@{
-                Nombre   = $elemento.ProcessName
-                PID      = $elemento.Id
-                Ruta     = $elemento.Path
-                Firma    = "Error al verificar"
-            }
+
         }
+        # Impresión de la tabla de procesos con firma No Valida
+        Write-Host "TABLA DE PROCESOS SOSPECHOSOS"
+        $procesos_sospechosos | Format-Table -AutoSize
+        $informe_csv_2 = $procesos_sospechosos | ForEach-Object { [PSCustomObject]@{Proceso = $_.Nombre
+                Ruta = $_.Ruta
+            } }
+        $informe_csv_2 | Export-Csv -Path "$env:USERPROFILE\Desktop\procesos_sospechosos.csv" -NoTypeInformation
 
+        Write-Host "-------------------------------------------------------------------"
+        Write-Host "FIN DE BUSQUEDA DE PROCESOS SOSPECHOSOS"
+        Write-Host "-------------------------------------------------------------------"
     }
-    # Impresión de la tabla de procesos con firma No Valida
-    Write-Host "TABLA DE PROCESOS SOSPECHOSOS"
-    $procesos_sospechosos | Format-Table -AutoSize
 
-    $informe_csv_2 = $procesos_sospechosos | ForEach-Object { [PSCustomObject]@{Proceso = $_.Nombre
-                                                                                Ruta = $_.Ruta } }
-    $informe_csv_2 | Export-Csv -Path "$env:USERPROFILE\Desktop\procesos_sospechosos.csv" -NoTypeInformation
-
-    Write-Host "-------------------------------------------------------------------"
-    Write-Host "FIN DE BUSQUEDA DE PROCESOS SOSPECHOSOS"
-    Write-Host "-------------------------------------------------------------------"
-
-    if ($ReturnIPList){
-        return $arreglo_unico
+    if ($ReturnIPList)
+    {
+        Write-Host $arreglo_ip
+        return $arreglo_ip
     }
 }
-#EndRegion './Public/Get-NetworkProcess.ps1' 131
+#EndRegion './Public/Get-NetworkProcess.ps1' 144
 #Region './Public/Select-ForensicTool.ps1' -1
 
 function Select-ForensicTool {
@@ -450,6 +461,10 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
         Write-Warning "Empty IP list"
         return $null
     }
+    else
+    {
+        Write-Host "El arreglo es: $IpList"
+    }
 
     try
     {
@@ -465,12 +480,12 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
         Write-Error "Unexpected error when the API Key: $_"
     }
 
-    foreach ($Ip in $IpList)
+    foreach ($String in $IpList)
     {
         try
         {
             # Parse will throw if InputString is not a valid IP address
-            $Ip=[System.Net.IPAddress]::Parse($Ip)
+            $Ip=[System.Net.IPAddress]::Parse($String)
             $Answer=Test-Ip -Ip $Ip -ApiKey $ApiKey
             $Results+=$Answer.data
         } catch [System.FormatException]
@@ -503,4 +518,4 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
     }
     return $Results | Format-Table
 }
-#EndRegion './Public/Test-IpList.ps1' 119
+#EndRegion './Public/Test-IpList.ps1' 123

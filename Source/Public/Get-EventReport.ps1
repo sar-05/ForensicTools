@@ -22,8 +22,6 @@ function Get-EventReport(){
         [string]$ExportPath
     )
 
-    Set-StrictMode -Version Latest
-
     $startDate = (Get-Date).AddDays(-$Days)
     if (-not $ExportPath) {
         $ExportPath = "$env:USERPROFILE\Desktop\eventos_$((Get-Date).ToString('yyyyMMdd_HHmm')).csv"
