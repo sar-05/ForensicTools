@@ -21,7 +21,7 @@ function Set-ApiKey
             }
             # Validation fails when status code isn't 200
             throw [System.FormatException]::new("API Key failed validation")
-        } catch [System.FormatException]
+        } catch
         {
             Write-Warning "Unable to set API Key: $_"
         }
