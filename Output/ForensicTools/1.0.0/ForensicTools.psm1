@@ -353,12 +353,13 @@ Puede ayudar identificar anomalias que esten corriendo en el equipo, ayudando a 
 
     if ($ReturnIPList)
     {
-        Write-Host $arreglo_ip
-        return $arreglo_ip
+        return $arreglo_unico
     }
 }
-#EndRegion './Public/Get-NetworkProcess.ps1' 144
+#EndRegion './Public/Get-NetworkProcess.ps1' 143
 #Region './Public/Select-ForensicTool.ps1' -1
+
+Set-StrictMode -Version Latest
 
 function Select-ForensicTool {
 
@@ -393,7 +394,7 @@ function Select-ForensicTool {
         }
     }
 }
-#EndRegion './Public/Select-ForensicTool.ps1' 34
+#EndRegion './Public/Select-ForensicTool.ps1' 36
 #Region './Public/Test-IpList.ps1' -1
 
 function Test-IpList
@@ -461,10 +462,6 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
         Write-Warning "Empty IP list"
         return $null
     }
-    else
-    {
-        Write-Host "El arreglo es: $IpList"
-    }
 
     try
     {
@@ -480,12 +477,12 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
         Write-Error "Unexpected error when the API Key: $_"
     }
 
-    foreach ($String in $IpList)
+    foreach ($Ip in $IpList)
     {
         try
         {
             # Parse will throw if InputString is not a valid IP address
-            $Ip=[System.Net.IPAddress]::Parse($String)
+            $Ip=[System.Net.IPAddress]::Parse($Ip)
             $Answer=Test-Ip -Ip $Ip -ApiKey $ApiKey
             $Results+=$Answer.data
         } catch [System.FormatException]
@@ -518,4 +515,4 @@ Ensure valid API credentials and network connectivity for AbuseIPDB calls.
     }
     return $Results | Format-Table
 }
-#EndRegion './Public/Test-IpList.ps1' 123
+#EndRegion './Public/Test-IpList.ps1' 119
